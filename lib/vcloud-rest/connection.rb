@@ -284,6 +284,18 @@ module VCloudClient
       task_id
     end
 
+    def packaged_query(object_type, filter)
+      @params = {
+        'method' => :get,
+        'command' => "/admin/#{object_type}/query"
+      }
+      if !filter.empty?
+        params['command'] << '?' + filter
+      end
+      response, headers = send_request(params)
+      response
+    end
+
     ##
     # Create a vapp starting from a template
     #
@@ -552,5 +564,6 @@ module VCloudClient
             "Unknown #{status_code}"
         end
       end
+
   end # class
 end
