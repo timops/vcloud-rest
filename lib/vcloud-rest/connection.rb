@@ -285,7 +285,7 @@ module VCloudClient
     end
 
     def packaged_query(object_type, filter)
-      @params = {
+      params = {
         'method' => :get,
         'command' => "/admin/#{object_type}/query"
       }
