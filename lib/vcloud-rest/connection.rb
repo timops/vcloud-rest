@@ -331,14 +331,14 @@ module VCloudClient
         "powerOn" => poweron) {
         xml.Description vapp_description
         #xml.Source("href" => "#{@api_url}/vAppTemplate/#{vapp_templateid}")
-        xml.Source("href" => uuids['name'])
+        xml.Source("href" => uuids[vapp_templateid])
       }
       end
 
       params = {
         "method" => :post,
         #"command" => "/vdc/#{vdc}/action/instantiateVAppTemplate"
-        "command" => "/vdc/#{uuids['vdc']}/action/instantiateVAppTemplate"
+        "command" => "/vdc/#{uuids[vdc]}/action/instantiateVAppTemplate"
       }
 
       response, headers = send_request(params, builder.to_xml, "application/vnd.vmware.vcloud.instantiateVAppTemplateParams+xml")
