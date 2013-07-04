@@ -298,7 +298,7 @@ module VCloudClient
 
     def resolve_uuids(template_name)
       uuid_hash = {}
-      xml_result = packaged_query('vAppTemplates', "filter=(name=#{template_name})")
+      xml_result = packaged_query('vAppTemplates', "filter=(name==#{template_name})")
 
       fmt_result = xml_result.css('QueryResultRecords VAppTemplateRecord')
       
