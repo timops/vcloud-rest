@@ -284,16 +284,31 @@ module VCloudClient
       task_id
     end
 
-    def packaged_query(object_type, filter)
+    def packaged_query(object_type, filter=nil)
       params = {
         'method' => :get,
-        'command' => "/admin/#{object_type}/query"
+        'command' => "/#{object_type}/query"
       }
-      if !filter.empty?
+      if !filter.nil?
         params['command'] << '?' + filter
       end
       response, headers = send_request(params)
       response
+    end
+
+    def resolve_uuids(template_name)
+      uuid_hash = {}
+      xml_result = packaged_query('vAppTemplates', "filter=(name=#{template_name})")
+
+      fmt_result = xml_result.css('QueryResultRecords VAppTemplateRecord')
+      
+      fmt_result.each do |result|
+        uuid_hash[result['name']] = result['href']
+        uuid_hash[result['vdcName']] = begin
+           result['vdc'] = result['vdc'].match(%r{[-\w]+$}).to_s
+        end
+      end
+      uuid_hash
     end
 
     ##
@@ -305,6 +320,7 @@ module VCloudClient
     # - vapp_description: description of the target vapp
     # - vapp_templateid: ID of the vapp template
     def create_vapp_from_template(vdc, vapp_name, vapp_description, vapp_templateid, poweron=false)
+      uuids = resolve_uuids(vapp_templateid)
       builder = Nokogiri::XML::Builder.new do |xml|
       xml.InstantiateVAppTemplateParams(
         "xmlns" => "http://www.vmware.com/vcloud/v1.5",
@@ -314,13 +330,15 @@ module VCloudClient
         "deploy" => "true",
         "powerOn" => poweron) {
         xml.Description vapp_description
-        xml.Source("href" => "#{@api_url}/vAppTemplate/#{vapp_templateid}")
+        #xml.Source("href" => "#{@api_url}/vAppTemplate/#{vapp_templateid}")
+        xml.Source("href" => uuids['name'])
       }
       end
 
       params = {
         "method" => :post,
-        "command" => "/vdc/#{vdc}/action/instantiateVAppTemplate"
+        #"command" => "/vdc/#{vdc}/action/instantiateVAppTemplate"
+        "command" => "/vdc/#{uuids['vdc']}/action/instantiateVAppTemplate"
       }
 
       response, headers = send_request(params, builder.to_xml, "application/vnd.vmware.vcloud.instantiateVAppTemplateParams+xml")
